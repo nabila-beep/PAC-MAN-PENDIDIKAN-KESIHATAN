@@ -1,0 +1,837 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Misi Wira Perisai: Pengejaran Maze</title>
+<style>
+:root {
+  --bg1: #1b1464;
+  --bg2: #3a1c9e;
+  --ink: #1e2a5a;
+  --ink-soft: #46538a;
+  --card: #ffffff;
+  --sun: #ffd60a;
+  --sun-dark: #d4a900;
+  --pink: #ff4d8d;
+  --green: #15803d;
+  --green-dark: #0f5f2d;
+  --green-bg: #dcfce7;
+  --red: #be123c;
+  --red-dark: #8f0d2e;
+  --red-bg: #ffe4e6;
+  --amber: #b45309;
+  --amber-dark: #7c3a07;
+  --amber-bg: #fef3c7;
+  --blue: #2f4bff;
+  --blue-dark: #1f33c4;
+  --font: 'Arial Rounded MT Bold', 'Varela Round', 'Nunito', 'Trebuchet MS', 'Comic Sans MS', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink);
+  background-color: var(--bg1);
+  background-image: radial-gradient(circle at 20% 10%, #5b3dd8 0, transparent 45%), linear-gradient(180deg, var(--bg1), var(--bg2));
+  background-attachment: fixed;
+  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+[hidden] { display: none !important; }
+#topbar { max-width: 960px; margin: 0 auto 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #fff; }
+#topbar .brand { font-size: 1.15rem; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; min-width: 0; }
+#topbar .brand svg { width: 28px; height: 32px; flex: none; }
+.chip-btn { font: inherit; font-size: .95rem; color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 14px; padding: 6px 14px; min-height: 44px; cursor: pointer; }
+.chip-btn[aria-pressed="false"] { background: #d7dbf0; color: var(--ink-soft); }
+#app { max-width: 960px; margin: 0 auto; }
+.screen { display: none; flex-direction: column; align-items: center; gap: 14px; }
+.panel, .quiz-card { width: 100%; background: var(--card); border: 4px solid var(--ink); border-radius: 28px; padding: clamp(16px, 3.5vw, 30px); box-shadow: 0 8px 0 rgba(0, 0, 0, .28); }
+.panel { text-align: center; align-items: center; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3 { margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: clamp(1.9rem, 6vw, 3rem); }
+h2 { font-size: clamp(1.4rem, 4vw, 2rem); }
+h3 { font-size: 1.2rem; }
+p { margin: 0; }
+.kicker { font-size: .9rem; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); }
+.lead { max-width: 56ch; font-size: 1.1rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; list-style: none; margin: 0; padding: 0; }
+.legend li { display: flex; align-items: center; gap: 8px; border: 3px solid var(--ink); border-radius: 14px; padding: 6px 12px; background: #f1f4ff; font-size: .95rem; }
+.legend i { width: 20px; height: 20px; border-radius: 50%; display: inline-block; border: 2px solid var(--ink); }
+
+/* Butang */
+.btn { font: inherit; font-size: 1.15rem; min-height: 60px; padding: 12px 26px; border: 3px solid var(--ink); border-radius: 20px; cursor: pointer; color: #fff; background: var(--blue); box-shadow: 0 6px 0 var(--blue-dark); transition: transform .08s, box-shadow .08s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 1px 0 var(--blue-dark); }
+.btn:disabled { cursor: default; }
+.btn-sun { background: var(--sun); color: var(--ink); box-shadow: 0 6px 0 var(--sun-dark); }
+.btn-big { font-size: 1.5rem; min-height: 72px; padding: 14px 44px; }
+.btn-good { background: var(--green); box-shadow: 0 6px 0 var(--green-dark); }
+.btn-bad { background: var(--red); box-shadow: 0 6px 0 var(--red-dark); }
+.btn-warn { background: var(--amber); box-shadow: 0 6px 0 var(--amber-dark); }
+.btn:focus-visible, .chip-btn:focus-visible, .dpad button:focus-visible, .hs:focus-visible { outline: 4px solid var(--sun); outline-offset: 3px; }
+
+/* Fasa maze */
+#game-container { width: 100%; }
+.hud { width: min(100%, 560px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hud .stat { background: #fff; border: 3px solid var(--ink); border-radius: 16px; padding: 4px 12px; text-align: center; font-size: .98rem; }
+.hud .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+#mazeMsg { grid-column: 1 / -1; background: var(--sun); border: 3px solid var(--ink); border-radius: 16px; padding: 6px 12px; text-align: center; min-height: 46px; display: flex; align-items: center; justify-content: center; }
+#mazeMsg.bad { background: var(--red-bg); }
+#maze { width: min(92vw, 62vh, 560px); height: auto; aspect-ratio: 1 / 1; border: 4px solid var(--ink); border-radius: 20px; background: #070a2b; display: block; touch-action: none; box-shadow: 0 8px 0 rgba(0,0,0,.28); }
+.dpad { display: grid; grid-template-columns: repeat(3, clamp(60px, 18vw, 76px)); grid-template-rows: repeat(3, clamp(60px, 18vw, 76px)); gap: 6px; user-select: none; -webkit-user-select: none; touch-action: none; }
+.dpad button { font: inherit; font-size: 1.7rem; color: var(--ink); background: var(--sun); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--sun-dark); cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.dpad button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--sun-dark); }
+.dpad .up { grid-area: 1 / 2; } .dpad .left { grid-area: 2 / 1; } .dpad .right { grid-area: 2 / 3; } .dpad .down { grid-area: 3 / 2; }
+.dpad .mid { grid-area: 2 / 2; border-radius: 50%; background: #5b3dd8; border: 3px solid var(--ink); opacity: .85; }
+
+/* Fasa kuiz */
+.quiz-card { max-width: 900px; display: flex; flex-direction: column; gap: 14px; }
+.quiz-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.badge { display: inline-block; background: var(--sun); border: 3px solid var(--ink); border-radius: 999px; padding: 2px 14px; font-size: .95rem; }
+.badge.alt { background: #fff; }
+.task { font-size: 1.12rem; }
+.q-text { font-size: 1.3rem; line-height: 1.35; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.opt { min-height: 74px; }
+.opt.is-correct { outline: 5px solid var(--sun); outline-offset: 3px; }
+.opt.is-wrong { opacity: .5; text-decoration: line-through; }
+.scene { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; background: #f1f4ff; border: 3px solid var(--ink); border-radius: 22px; padding: 14px 16px; }
+.scene .emoji { font-size: clamp(2.6rem, 9vw, 4rem); line-height: 1; letter-spacing: .08em; white-space: nowrap; }
+.scene .cap { font-size: .9rem; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); }
+.fb { border: 3px solid var(--ink); border-radius: 18px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.fb.good { background: var(--green-bg); }
+.fb.bad { background: var(--red-bg); }
+.fb.info { background: #fffbe6; }
+.quiz-actions { display: flex; justify-content: flex-end; }
+.complete { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; }
+.complete .big { font-size: 4rem; line-height: 1; }
+
+/* Zon sentuhan */
+.zones { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.figures { display: flex; gap: 10px; justify-content: center; background: linear-gradient(180deg, #eaf7ff, #d3efff); border: 3px solid var(--ink); border-radius: 22px; padding: 10px 6px 6px; }
+.figures figure { margin: 0; flex: 1 1 0; min-width: 0; text-align: center; }
+.figures figcaption { font-size: 1.15rem; }
+.figures svg { width: 100%; max-width: 220px; height: auto; display: block; margin: 0 auto; }
+.figures[data-view="front"] .v-back { display: none; }
+.figures[data-view="back"] .v-front { display: none; }
+.figures.shake { animation: shake .45s; }
+.hs { fill: rgba(0, 0, 0, 0); cursor: pointer; }
+.hs:focus-visible { outline: none; stroke: var(--ink); stroke-width: 3; }
+.dot { display: none; pointer-events: none; fill: #ef233c; stroke: #fff; stroke-width: 3; }
+.dot.found { display: block; animation: pulse 1s ease-in-out 3; transform-box: fill-box; transform-origin: center; }
+.tag { display: none; pointer-events: none; }
+.tag.found { display: block; }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chips li { border: 3px solid var(--ink); border-radius: 14px; padding: 6px 12px; background: #f1f4ff; color: var(--ink-soft); }
+.chips li::before { content: "○ "; }
+.chips li.done { background: var(--red-bg); color: var(--red); }
+.chips li.done::before { content: "● "; }
+
+/* Susun langkah */
+.slots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.slot { display: flex; gap: 10px; align-items: center; border: 3px dashed var(--ink-soft); border-radius: 18px; padding: 10px 12px; min-height: 64px; background: #f6f8ff; color: var(--ink-soft); }
+.slot .n { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; }
+.slot.filled { border-style: solid; border-color: var(--ink); background: var(--green-bg); color: var(--ink); }
+.act.used { opacity: .4; box-shadow: none; transform: translateY(5px); }
+.act.shake { animation: shake .45s; }
+
+/* Tamat */
+.badge-gold { width: clamp(160px, 38vw, 230px); height: auto; animation: pop .7s ease-out both; }
+.score { background: var(--green-bg); border: 3px solid var(--ink); border-radius: 18px; padding: 6px 20px; font-size: 1.2rem; }
+.recap { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; width: 100%; text-align: left; }
+.recap li { border: 3px solid var(--ink); border-radius: 16px; padding: 10px 14px; background: #f1f4ff; }
+.recap b { display: block; }
+.rule { background: var(--sun); border: 3px solid var(--ink); border-radius: 18px; padding: 10px 16px; max-width: 60ch; }
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+@keyframes pop { 0% { transform: scale(.3) rotate(-8deg); opacity: 0; } 70% { transform: scale(1.08) rotate(2deg); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 760px) {
+  .zones { grid-template-columns: minmax(0, 1fr); }
+  .scene { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+}
+</style>
+</head>
+<body>
+<canvas id="confetti" hidden aria-hidden="true"></canvas>
+
+<div id="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 3 L44 10 V28 C44 42 34 50 24 54 C14 50 4 42 4 28 V10 Z" fill="#2f4bff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><path d="M24 15 L28 24 L38 25 L30.5 31.5 L33 41 L24 36 L15 41 L17.5 31.5 L10 25 L20 24 Z" fill="#ffd60a" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    <span>Misi Wira Perisai</span>
+  </div>
+  <button class="chip-btn" id="btnSound" type="button" aria-pressed="true">Bunyi: Hidup</button>
+</div>
+
+<main id="app">
+  <!-- SKRIN MULA -->
+  <section id="start-screen" class="screen panel" style="display:flex">
+    <svg viewBox="0 0 160 130" width="150" height="122" aria-hidden="true">
+      <path d="M80 65 L128 28 A60 60 0 1 0 128 102 Z" fill="#ffd60a" stroke="#1e2a5a" stroke-width="6" stroke-linejoin="round"/>
+      <circle cx="88" cy="32" r="6" fill="#1e2a5a"/>
+      <path d="M118 40 L148 40 V58 C148 70 140 76 133 79 C126 76 118 70 118 58 Z" fill="#2f4bff" stroke="#1e2a5a" stroke-width="4" stroke-linejoin="round"/>
+    </svg>
+    <p class="kicker">Pendidikan Kesihatan · Tahun 3</p>
+    <h1>Misi Wira Perisai: Pengejaran Maze</h1>
+    <p class="lead">Bawa Wira Perisai ke petak hijau KELUAR. Jauhi robot merah! Di setiap pintu keluar, jawab kuiz tentang batas sentuhan selamat.</p>
+    <ul class="legend">
+      <li><i style="background:#ffd60a"></i>Wira Perisai</li>
+      <li><i style="background:#ef233c"></i>Robot musuh</li>
+      <li><i style="background:#39ff14"></i>Pintu keluar</li>
+    </ul>
+    <p>Guna kekunci anak panah atau butang D-Pad. Jika disentuh robot, kamu mula semula dari petak mula.</p>
+    <button class="btn btn-sun btn-big" id="btnStart" type="button">MULA MISI</button>
+  </section>
+
+  <!-- FASA MAZE -->
+  <section id="game-container" class="screen">
+    <div class="hud">
+      <div class="stat">Level <b id="hudLevel">1</b> / 3</div>
+      <div class="stat">Ditangkap: <b id="hudHits">0</b></div>
+      <div id="mazeMsg" role="status" aria-live="polite"></div>
+    </div>
+    <canvas id="maze" width="600" height="600" role="img" aria-label="Maze 10 kali 10. Gerakkan Wira Perisai ke petak hijau KELUAR."></canvas>
+    <div class="dpad" id="dpad" aria-label="Kawalan arah">
+      <button type="button" class="up" data-dr="-1" data-dc="0" aria-label="Atas">&#9650;</button>
+      <button type="button" class="left" data-dr="0" data-dc="-1" aria-label="Kiri">&#9664;</button>
+      <div class="mid" aria-hidden="true"></div>
+      <button type="button" class="right" data-dr="0" data-dc="1" aria-label="Kanan">&#9654;</button>
+      <button type="button" class="down" data-dr="1" data-dc="0" aria-label="Bawah">&#9660;</button>
+    </div>
+  </section>
+
+  <!-- FASA KUIZ -->
+  <section id="quiz-container" class="screen">
+    <div class="quiz-card">
+      <div class="quiz-head"><span class="badge" id="quizLevel">Kuiz Peringkat 1</span><span class="badge alt" id="quizStep">Soalan 1 / 2</span></div>
+      <div id="quizBody"></div>
+      <div id="quizFeedback" class="fb" role="status" aria-live="polite" hidden></div>
+      <div class="quiz-actions"><button class="btn" id="quizNext" type="button" hidden>SETERUSNYA</button></div>
+    </div>
+  </section>
+
+  <!-- SKRIN TAMAT -->
+  <section id="end-screen" class="screen panel">
+    <svg class="badge-gold" viewBox="0 0 200 230" role="img" aria-label="Lencana Wira Perisai emas">
+      <defs>
+        <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset=".55" stop-color="#ffc21a"/><stop offset="1" stop-color="#e09a00"/></linearGradient>
+        <linearGradient id="gRib" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b7bff"/><stop offset="1" stop-color="#1f33c4"/></linearGradient>
+      </defs>
+      <path d="M52 140 L36 220 L70 204 L90 226 L100 150 Z" fill="url(#gRib)" stroke="#1e2a5a" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M148 140 L164 220 L130 204 L110 226 L100 150 Z" fill="url(#gRib)" stroke="#1e2a5a" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="100" cy="96" r="80" fill="url(#gGold)" stroke="#1e2a5a" stroke-width="6"/>
+      <circle cx="100" cy="96" r="62" fill="none" stroke="#fff6c2" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>
+      <path d="M100 42 L148 58 V94 C148 122 126 140 100 150 C74 140 52 122 52 94 V58 Z" fill="#2f4bff" stroke="#1e2a5a" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M100 66 L108 86 L130 88 L113 102 L118 124 L100 112 L82 124 L87 102 L70 88 L92 86 Z" fill="#ffd84d" stroke="#1e2a5a" stroke-width="3.5" stroke-linejoin="round"/>
+    </svg>
+    <p class="kicker">Misi berjaya</p>
+    <h1>Lencana Wira Perisai</h1>
+    <p class="score" id="endScore"></p>
+    <ul class="recap">
+      <li><b>Bibir, dada, punggung, kemaluan</b>Ini anggota peribadi. Tidak boleh disentuh sesuka hati.</li>
+      <li><b>Sentuhan selamat</b>Contohnya rakan atau guru menepuk bahu untuk tahniah.</li>
+      <li><b>Sentuhan bersyarat</b>Contohnya doktor memeriksa badan dengan ibu atau bapa ada bersama.</li>
+      <li><b>Sentuhan tidak selamat</b>Kata TIDAK, lari dan beritahu orang dewasa dipercayai.</li>
+    </ul>
+    <p class="rule">Ingat: Kata TIDAK! Lari ke tempat selamat. Beritahu ibu bapa atau guru. Ia bukan salah kamu.</p>
+    <button class="btn btn-sun btn-big" id="btnAgain" type="button">MAIN SEMULA</button>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* =============== AUDIO =============== */
+  var ac = null, muted = false;
+  function getCtx() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    return ac;
+  }
+  function tone(freq, start, dur, type, vol) {
+    var a = getCtx();
+    if (!a || muted) return;
+    try {
+      var o = a.createOscillator(), g = a.createGain(), t = a.currentTime + start;
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(a.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    } catch (e) {}
+  }
+  var sfx = {
+    bell: function () { tone(880, 0, 0.45, 'sine', 0.22); tone(1320, 0.12, 0.55, 'sine', 0.18); tone(1760, 0.26, 0.6, 'sine', 0.1); },
+    warn: function () { tone(240, 0, 0.26, 'triangle', 0.2); tone(190, 0.2, 0.36, 'triangle', 0.18); },
+    step: function () { tone(520, 0, 0.05, 'square', 0.04); },
+    win: function () { [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, i * 0.14, 0.5, 'sine', 0.2); }); tone(1568, 0.8, 0.9, 'sine', 0.18); }
+  };
+  $('btnSound').addEventListener('click', function () {
+    muted = !muted;
+    this.setAttribute('aria-pressed', String(!muted));
+    this.textContent = muted ? 'Bunyi: Mati' : 'Bunyi: Hidup';
+    if (!muted) sfx.bell();
+  });
+
+  /* =============== DATA LEVEL =============== */
+  /*LEVELS_START*/
+  var N = 10, CELL = 60;
+  var LEVELS = [
+    {
+      map: ['...#......', '.#.#.####.', '.#.....#..', '.#####.#.#', '......#...', '####.#.###', '...#.#....', '.#.#.####.', '.#........', '.####.###.'],
+      start: [0, 0], exit: [9, 9], enemies: [], speed: 0,
+      hint: 'Tiada robot di level ini. Capai petak hijau KELUAR!'
+    },
+    {
+      map: ['...#......', '.#.#.####.', '.#.....#..', '.#####.#.#', '....#.....', '#........#', '..........', '.########.', '..........', '.#######..'],
+      start: [0, 0], exit: [9, 9], speed: 520,
+      enemies: [{ r: 5, c: 7, dr: 0, dc: -1 }],
+      hint: 'Awas! 1 robot merah meronda kiri-kanan.'
+    },
+    {
+      map: ['...#......', '.#.#.####.', '.#.....#..', '.#####.#.#', '....#.....', '#.......##', '..........', '.#######..', '..........', '.########.'],
+      start: [0, 0], exit: [9, 9], speed: 480,
+      enemies: [{ r: 5, c: 2, dr: 0, dc: 1 }, { r: 6, c: 8, dr: 1, dc: 0 }],
+      hint: 'Awas! 2 robot: satu kiri-kanan, satu atas-bawah.'
+    }
+  ];
+  /*LEVELS_END*/
+
+  /* =============== STATE =============== */
+  var phase = 'start';
+  var SCREENS = { start: 'start-screen', maze: 'game-container', quiz: 'quiz-container', end: 'end-screen' };
+  var lvl = 0, hits = 0, wrongAnswers = 0;
+  var grid = [], player = null, enemies = [], exiting = false;
+  var rafId = 0, enemyTimer = 0, flashUntil = 0, lastMove = 0, msgTimer = 0;
+  var repeatT = 0, holdT = 0;
+
+  function setPhase(name) {
+    phase = name;
+    Object.keys(SCREENS).forEach(function (k) {
+      $(SCREENS[k]).style.display = (k === name) ? 'flex' : 'none';
+    });
+    if (name === 'maze') startMaze(); else stopMaze();
+    if (name !== 'end') stopConfetti();
+    window.scrollTo(0, 0);
+  }
+
+  /* =============== MAZE (CANVAS) =============== */
+  var cv = $('maze'), g = cv.getContext('2d');
+
+  function isOpen(r, c) { return r >= 0 && c >= 0 && r < N && c < N && grid[r].charAt(c) !== '#'; }
+
+  function loadLevel(i) {
+    lvl = i;
+    var L = LEVELS[i];
+    grid = L.map;
+    resetPositions();
+    exiting = false;
+    $('hudLevel').textContent = String(i + 1);
+    $('hudHits').textContent = String(hits);
+    setMsg(L.hint, false);
+  }
+  function resetPositions() {
+    var L = LEVELS[lvl];
+    player = { r: L.start[0], c: L.start[1], x: L.start[1], y: L.start[0], dir: 0 };
+    enemies = (L.enemies || []).map(function (e) {
+      return { r: e.r, c: e.c, dr: e.dr, dc: e.dc, x: e.c, y: e.r, r0: e.r, c0: e.c, dr0: e.dr, dc0: e.dc };
+    });
+  }
+  function setMsg(text, bad) {
+    var m = $('mazeMsg');
+    m.textContent = text;
+    m.className = bad ? 'bad' : '';
+  }
+  function startMaze() {
+    stopMaze();
+    rafId = requestAnimationFrame(frame);
+    var L = LEVELS[lvl];
+    if (enemies.length) enemyTimer = setInterval(stepEnemies, L.speed);
+  }
+  function stopMaze() {
+    cancelAnimationFrame(rafId); rafId = 0;
+    clearInterval(enemyTimer); enemyTimer = 0;
+    clearTimeout(msgTimer);
+    dpadStop();
+  }
+
+  function checkHit() {
+    for (var i = 0; i < enemies.length; i++) {
+      if (enemies[i].r === player.r && enemies[i].c === player.c) { caught(); return true; }
+    }
+    return false;
+  }
+  function caught() {
+    hits++;
+    $('hudHits').textContent = String(hits);
+    sfx.warn();
+    flashUntil = performance.now() + 450;
+    resetPositions();
+    setMsg('Aduh! Robot menangkap kamu. Kembali ke petak mula!', true);
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(function () { if (phase === 'maze') setMsg(LEVELS[lvl].hint, false); }, 2600);
+  }
+  function stepEnemies() {
+    if (phase !== 'maze' || exiting) return;
+    enemies.forEach(function (e) {
+      var nr = e.r + e.dr, nc = e.c + e.dc;
+      if (!isOpen(nr, nc)) {
+        e.dr = -e.dr; e.dc = -e.dc;
+        nr = e.r + e.dr; nc = e.c + e.dc;
+      }
+      if (isOpen(nr, nc)) { e.r = nr; e.c = nc; }
+    });
+    checkHit();
+  }
+  function movePlayer(dr, dc) {
+    if (phase !== 'maze' || exiting) return;
+    var now = performance.now();
+    if (now - lastMove < 80) return;
+    lastMove = now;
+    player.dir = dc === 1 ? 0 : dr === 1 ? 1 : dc === -1 ? 2 : 3;
+    var nr = player.r + dr, nc = player.c + dc;
+    if (!isOpen(nr, nc)) return;
+    player.r = nr; player.c = nc;
+    sfx.step();
+    if (checkHit()) return;
+    var L = LEVELS[lvl];
+    if (nr === L.exit[0] && nc === L.exit[1]) onExit();
+  }
+  function onExit() {
+    exiting = true;
+    sfx.bell();
+    setMsg('Berjaya sampai ke pintu keluar!', false);
+    setTimeout(function () {
+      if (phase !== 'maze') return;
+      startQuiz(lvl + 1);
+      setPhase('quiz');
+    }, 450);
+  }
+
+  /* Input papan kekunci */
+  var KEYDIR = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1], w: [-1, 0], s: [1, 0], a: [0, -1], d: [0, 1], W: [-1, 0], S: [1, 0], A: [0, -1], D: [0, 1] };
+  document.addEventListener('keydown', function (e) {
+    if (phase !== 'maze') return;
+    var d = KEYDIR[e.key];
+    if (!d) return;
+    if (e.key.indexOf('Arrow') === 0) e.preventDefault();
+    movePlayer(d[0], d[1]);
+  }, { passive: false });
+
+  /* D-Pad */
+  function dpadStop() { clearTimeout(holdT); clearInterval(repeatT); holdT = 0; repeatT = 0; }
+  Array.prototype.forEach.call($('dpad').querySelectorAll('button'), function (b) {
+    var dr = parseInt(b.getAttribute('data-dr'), 10), dc = parseInt(b.getAttribute('data-dc'), 10);
+    b.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      dpadStop();
+      movePlayer(dr, dc);
+      holdT = setTimeout(function () { repeatT = setInterval(function () { movePlayer(dr, dc); }, 150); }, 320);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, dpadStop); });
+    b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    b.addEventListener('click', function (e) { if (e.detail === 0) movePlayer(dr, dc); }); /* Enter/Space pada butang */
+  });
+
+  /* Lukisan */
+  function rr(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function drawEnemy(e, t) {
+    e.x += (e.c - e.x) * 0.28; e.y += (e.r - e.y) * 0.28;
+    var px = e.x * CELL + CELL / 2, py = e.y * CELL + CELL / 2 + 2 + Math.sin(t / 180 + e.c) * 1.5;
+    var look = Math.max(-1, Math.min(1, player.x - e.x)) * 1.8;
+    g.save(); g.translate(px, py);
+    g.strokeStyle = '#7f1d1d'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(0, -18); g.lineTo(0, -26); g.stroke();
+    g.fillStyle = '#ffd60a'; g.beginPath(); g.arc(0, -28, 4, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#ef233c'; rr(g, -20, -19, 40, 36, 9); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-8, -7, 6, 0, Math.PI * 2); g.arc(8, -7, 6, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#111'; g.beginPath(); g.arc(-8 + look, -7, 2.8, 0, Math.PI * 2); g.arc(8 + look, -7, 2.8, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#7f1d1d'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(-9, 5); g.lineTo(9, 5); g.moveTo(-9, 9); g.lineTo(9, 9); g.moveTo(-5, 3); g.lineTo(-5, 11); g.moveTo(0, 3); g.lineTo(0, 11); g.moveTo(5, 3); g.lineTo(5, 11); g.stroke();
+    g.fillStyle = '#7f1d1d'; g.fillRect(-14, 17, 10, 5); g.fillRect(4, 17, 10, 5);
+    g.restore();
+  }
+  function drawPlayer(t) {
+    player.x += (player.c - player.x) * 0.35; player.y += (player.r - player.y) * 0.35;
+    var cx = player.x * CELL + CELL / 2, cy = player.y * CELL + CELL / 2;
+    var base = player.dir * Math.PI / 2;
+    var m = 0.08 + 0.30 * Math.abs(Math.sin(t / 110));
+    var R = 23;
+    g.fillStyle = '#ffd60a'; g.strokeStyle = '#2f6bff'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, base + m * Math.PI, base + Math.PI * 2 - m * Math.PI); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#1e2a5a';
+    g.beginPath(); g.arc(cx + Math.cos(base - 1.15) * 11, cy + Math.sin(base - 1.15) * 11, 3.2, 0, Math.PI * 2); g.fill();
+  }
+  function draw(t) {
+    var r, c, x, y;
+    g.fillStyle = '#070a2b'; g.fillRect(0, 0, 600, 600);
+    for (r = 0; r < N; r++) {
+      for (c = 0; c < N; c++) {
+        x = c * CELL; y = r * CELL;
+        if (grid[r].charAt(c) === '#') {
+          g.fillStyle = '#2338c4'; rr(g, x + 3, y + 3, CELL - 6, CELL - 6, 12); g.fill();
+          g.strokeStyle = '#8fb0ff'; g.lineWidth = 3; g.stroke();
+          g.fillStyle = 'rgba(255,255,255,.12)'; rr(g, x + 10, y + 10, CELL - 30, 10, 5); g.fill();
+        } else {
+          g.fillStyle = ((r + c) % 2) ? '#0c1240' : '#0a0f38'; g.fillRect(x, y, CELL, CELL);
+        }
+      }
+    }
+    var L = LEVELS[lvl];
+    /* petak mula */
+    x = L.start[1] * CELL; y = L.start[0] * CELL;
+    g.strokeStyle = '#4cc9f0'; g.lineWidth = 3; g.setLineDash([6, 5]); rr(g, x + 5, y + 5, CELL - 10, CELL - 10, 10); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#4cc9f0'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.fillText('MULA', x + CELL / 2, y + CELL - 9);
+    /* pintu keluar */
+    x = L.exit[1] * CELL; y = L.exit[0] * CELL;
+    var pulse = 0.5 + 0.5 * Math.sin(t / 250);
+    g.save(); g.shadowColor = '#39ff14'; g.shadowBlur = 14 + 16 * pulse;
+    g.fillStyle = '#39ff14'; rr(g, x + 6, y + 6, CELL - 12, CELL - 12, 10); g.fill(); g.restore();
+    g.fillStyle = '#053b00'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center'; g.fillText('KELUAR', x + CELL / 2, y + CELL / 2 + 4);
+    enemies.forEach(function (e) { drawEnemy(e, t); });
+    drawPlayer(t);
+    if (performance.now() < flashUntil) { g.fillStyle = 'rgba(239,35,60,.35)'; g.fillRect(0, 0, 600, 600); }
+  }
+  function frame(t) {
+    draw(t);
+    rafId = requestAnimationFrame(frame);
+  }
+
+  /* =============== ILUSTRASI ADAM & AINA =============== */
+  function figureSVG(who) {
+    var girl = who === 'aina';
+    var skin = girl ? '#f3cba7' : '#e8b78b', hair = girl ? '#3b2418' : '#2b1b12';
+    var shirt = girl ? '#ff7aa8' : '#3b82f6', pants = girl ? '#6d28d9' : '#1e3a8a', ink = '#1e2a5a';
+    var name = girl ? 'Aina' : 'Adam';
+    var st = ' stroke="' + ink + '" stroke-width="3"';
+    var tails = girl ? '<circle cx="52" cy="76" r="16" fill="' + hair + '"' + st + '/><circle cx="148" cy="76" r="16" fill="' + hair + '"' + st + '/>' : '';
+    var band = girl ? '<circle cx="62" cy="40" r="6" fill="#ffc21a" stroke="' + ink + '" stroke-width="2"/><circle cx="138" cy="40" r="6" fill="#ffc21a" stroke="' + ink + '" stroke-width="2"/>' : '';
+    var legs =
+      '<rect x="60" y="212" width="80" height="28" rx="10" fill="' + pants + '"' + st + '/>' +
+      '<rect x="62" y="228" width="37" height="98" rx="12" fill="' + pants + '"' + st + '/>' +
+      '<rect x="101" y="228" width="37" height="98" rx="12" fill="' + pants + '"' + st + '/>' +
+      '<rect x="67" y="244" width="4" height="76" rx="2" fill="#fff" opacity=".85"/><rect x="129" y="244" width="4" height="76" rx="2" fill="#fff" opacity=".85"/>' +
+      '<ellipse cx="80" cy="336" rx="24" ry="11" fill="#fff"' + st + '/><ellipse cx="120" cy="336" rx="24" ry="11" fill="#fff"' + st + '/>';
+    var arms =
+      '<rect x="34" y="128" width="22" height="78" rx="11" fill="' + skin + '"' + st + '/><rect x="144" y="128" width="22" height="78" rx="11" fill="' + skin + '"' + st + '/>' +
+      '<circle cx="45" cy="210" r="12" fill="' + skin + '"' + st + '/><circle cx="155" cy="210" r="12" fill="' + skin + '"' + st + '/>';
+    var neck = '<rect x="91" y="104" width="18" height="22" rx="6" fill="' + skin + '"' + st + '/>';
+    var torso =
+      '<rect x="56" y="120" width="88" height="104" rx="16" fill="' + shirt + '"' + st + '/>' +
+      '<rect x="36" y="122" width="28" height="40" rx="13" fill="' + shirt + '"' + st + '/><rect x="136" y="122" width="28" height="40" rx="13" fill="' + shirt + '"' + st + '/>';
+    function hs(zone, shape, label) {
+      return shape.replace(/^<(\w+)/, '<$1 class="hs" data-zone="' + zone + '" role="button" tabindex="0" aria-label="Zon ' + label + ' pada ' + name + '"');
+    }
+    function dot(zone, cx, cy) { return '<circle class="dot" data-dot="' + zone + '" cx="' + cx + '" cy="' + cy + '" r="9"/>'; }
+    function tag(zone, cx, cy, w, label) {
+      return '<g class="tag" data-tag="' + zone + '"><rect x="' + (cx - w / 2) + '" y="' + (cy - 11) + '" width="' + w + '" height="22" rx="11" fill="' + ink + '"/>' +
+        '<text x="' + cx + '" y="' + (cy + 5) + '" text-anchor="middle" font-family="Arial Rounded MT Bold, Trebuchet MS, sans-serif" font-size="13" fill="#fff">' + label + '</text></g>';
+    }
+    var front =
+      '<g class="v-front">' + tails + arms + legs + neck + torso +
+      '<path d="M84 121 Q100 140 116 121" fill="' + skin + '"' + st + '/>' +
+      '<circle cx="60" cy="74" r="8" fill="' + skin + '"' + st + '/><circle cx="140" cy="74" r="8" fill="' + skin + '"' + st + '/>' +
+      '<circle cx="100" cy="68" r="40" fill="' + skin + '"' + st + '/>' +
+      '<path d="M60 64 Q56 24 100 24 Q144 24 140 64 Q130 44 100 44 Q70 44 60 64 Z" fill="' + hair + '"' + st + ' stroke-linejoin="round"/>' + band +
+      '<ellipse cx="85" cy="68" rx="4.5" ry="5.5" fill="' + ink + '"/><ellipse cx="115" cy="68" rx="4.5" ry="5.5" fill="' + ink + '"/>' +
+      '<circle cx="76" cy="82" r="6" fill="#ff8fa3" opacity=".55"/><circle cx="124" cy="82" r="6" fill="#ff8fa3" opacity=".55"/>' +
+      '<path d="M88 86 Q100 101 112 86 Q100 90 88 86 Z" fill="#e8556d" stroke="#b83a52" stroke-width="2" stroke-linejoin="round"/>' +
+      hs('bibir', '<ellipse cx="100" cy="90" rx="18" ry="12"/>', 'bibir') +
+      hs('dada', '<rect x="68" y="130" width="64" height="48" rx="12"/>', 'dada') +
+      hs('kemaluan', '<rect x="74" y="226" width="52" height="40" rx="14"/>', 'kemaluan') +
+      dot('bibir', 100, 90) + dot('dada', 100, 154) + dot('kemaluan', 100, 246) +
+      tag('bibir', 100, 120, 52, 'Bibir') + tag('dada', 100, 178, 52, 'Dada') + tag('kemaluan', 100, 274, 76, 'Kemaluan') +
+      '</g>';
+    var back =
+      '<g class="v-back">' + tails + arms + legs +
+      '<path d="M100 240 L100 296" stroke="' + ink + '" stroke-width="3" stroke-linecap="round" opacity=".5"/>' + neck + torso +
+      '<circle cx="100" cy="68" r="40" fill="' + hair + '"' + st + '/>' +
+      '<path d="M78 40 Q100 30 122 40" fill="none" stroke="#fff" stroke-width="3" opacity=".25" stroke-linecap="round"/>' + band +
+      hs('punggung', '<rect x="70" y="232" width="60" height="50" rx="20"/>', 'punggung') +
+      dot('punggung', 100, 257) + tag('punggung', 100, 292, 76, 'Punggung') +
+      '</g>';
+    return '<svg viewBox="0 0 200 360" role="group" aria-label="Kartun ' + name + ' berpakaian sukan">' + front + back + '</svg>';
+  }
+
+  /* =============== KUIZ (DOM) =============== */
+  function h(tag, props) {
+    var e = document.createElement(tag), i, k;
+    if (props) { for (k in props) {
+      if (k === 'class') e.className = props[k];
+      else if (k === 'text') e.textContent = props[k];
+      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), props[k]);
+      else e.setAttribute(k, props[k]);
+    } }
+    for (i = 2; i < arguments.length; i++) {
+      var kid = arguments[i];
+      if (kid == null) continue;
+      e.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid);
+    }
+    return e;
+  }
+  var ZONES = {
+    bibir: { name: 'Bibir', text: 'Bibir ialah anggota peribadi. Tidak sesiapa boleh mencium atau menyentuh bibir kita sesuka hati.' },
+    dada: { name: 'Dada', text: 'Dada ditutup oleh baju dan pakaian dalam. Ia tidak boleh disentuh sesuka hati.' },
+    punggung: { name: 'Punggung', text: 'Punggung dilindungi oleh seluar dan pakaian dalam. Ia tidak boleh disentuh sesuka hati.' },
+    kemaluan: { name: 'Kemaluan', text: 'Kemaluan dilindungi oleh pakaian dalam. Ia kawasan yang paling peribadi.' }
+  };
+  var LABEL = { selamat: 'Sentuhan Selamat', tidak: 'Sentuhan Tidak Selamat', bersyarat: 'Sentuhan Bersyarat' };
+  var QUIZ = {
+    1: [
+      { type: 'zones' },
+      { type: 'choice', q: 'Kawasan manakah yang SELAMAT disentuh oleh rakan untuk mengucapkan tahniah?', options: ['Dada', 'Bahu', 'Punggung'], answer: 1,
+        why: 'Bahu bukan anggota peribadi, jadi rakan boleh menepuk bahu untuk mengucapkan tahniah. Dada dan punggung ialah zon larangan.' }
+    ],
+    2: [
+      { type: 'scenario', title: 'Senario A', emoji: '🌳🍬✋', answer: 'tidak',
+        text: 'Orang yang tidak dikenali di taman menawarkan gula-gula dan cuba menarik tangan serta memegang punggung kamu.',
+        why: 'Orang yang tidak dikenali tidak boleh menarik tangan atau memegang punggung kamu, walaupun menawarkan gula-gula. Kata TIDAK, lari dan beritahu orang dewasa dipercayai.' },
+      { type: 'scenario', title: 'Senario B', emoji: '🏥🩺👩', answer: 'bersyarat',
+        text: 'Doktor memeriksa bahagian dada kamu dengan stetoskop di klinik, dan ibu kamu berada di sebelah menemani.',
+        why: 'Doktor boleh memeriksa dada untuk menjaga kesihatan, tetapi dengan syarat ibu atau bapa ada bersama dan kita tahu tujuannya.' },
+      { type: 'scenario', title: 'Senario C', emoji: '🏫👩‍🏫⭐', answer: 'selamat',
+        text: 'Guru Kelas menepuk bahu kamu tanda bangga kerana kamu berjaya siapkan kerja sekolah.',
+        why: 'Menepuk bahu untuk menunjukkan bangga ialah sentuhan yang selamat dan sopan. Bahu bukan zon larangan.' }
+    ],
+    3: [
+      { type: 'choice', q: 'Situasi: Seorang abang sepupu cuba menyentuh kemaluan kamu ketika tiada orang lain di ruang tamu. Apakah tindakan PERTAMA yang mesti kamu lakukan dengan segera?',
+        options: ['Menangis senyap-senyap', 'Jerit dan KATA TIDAK dengan kuat', 'Pukul dia'], answer: 1,
+        why: 'Jerit dan KATA TIDAK dengan kuat supaya orang lain dengar dan dia berhenti. Ia bukan salah kamu.',
+        wrongWhy: {
+          0: 'Menangis senyap-senyap tidak menghentikan perbuatan itu dan tiada orang tahu kamu perlukan bantuan. Jawapan yang betul: Jerit dan KATA TIDAK dengan kuat.',
+          2: 'Memukul boleh membahayakan kamu. Cara yang lebih selamat ialah menjerit, berkata TIDAK dan lari. Jawapan yang betul: Jerit dan KATA TIDAK dengan kuat.'
+        } },
+      { type: 'order' }
+    ]
+  };
+  var STEP_TXT = { 1: 'KATA TIDAK', 2: 'LARI KE TEMPAT SELAMAT', 3: 'BERITAHU IBU BAPA/GURU' };
+  var STEP_HINT = { 1: 'Mulakan dengan suara yang tegas dan berani.', 2: 'Selepas berkata tidak, pergi jauh ke tempat yang selamat.', 3: 'Akhir sekali, cari ibu bapa atau guru untuk membantu kamu.' };
+  var STEP_CLS = { 1: 'btn-bad', 2: 'btn-warn', 3: 'btn-good' };
+
+  var qLevel = 1, qIdx = 0, nextAction = null;
+  var body = $('quizBody'), fb = $('quizFeedback'), nextBtn = $('quizNext');
+
+  function showFb(kind, title, text) {
+    fb.className = 'fb ' + kind;
+    fb.textContent = '';
+    fb.appendChild(h('h3', { text: title }));
+    if (text) fb.appendChild(h('p', { text: text }));
+    fb.hidden = false;
+  }
+  function hideFb() { fb.hidden = true; fb.textContent = ''; }
+  function offerNext() {
+    var n = QUIZ[qLevel].length;
+    nextBtn.textContent = qIdx < n - 1 ? 'SOALAN SETERUSNYA' : 'SELESAI KUIZ';
+    nextAction = function () { if (qIdx < n - 1) { qIdx++; renderQ(); } else levelComplete(); };
+    nextBtn.hidden = false;
+  }
+  function startQuiz(level) { qLevel = level; qIdx = 0; renderQ(); }
+  function renderQ() {
+    var list = QUIZ[qLevel], q = list[qIdx];
+    $('quizLevel').textContent = 'Kuiz Peringkat ' + qLevel;
+    $('quizStep').textContent = 'Soalan ' + (qIdx + 1) + ' / ' + list.length;
+    $('quizStep').hidden = false;
+    body.textContent = ''; hideFb(); nextBtn.hidden = true; nextAction = null;
+    if (q.type === 'zones') renderZones();
+    else if (q.type === 'choice') renderChoice(q);
+    else if (q.type === 'scenario') renderScenario(q);
+    else if (q.type === 'order') renderOrder();
+  }
+
+  /* --- Zon sentuhan (SVG) --- */
+  function renderZones() {
+    var found = {}, count = 0;
+    var figs = h('div', { class: 'figures', 'data-view': 'front' });
+    ['adam', 'aina'].forEach(function (who) {
+      var holder = h('div'); holder.innerHTML = figureSVG(who);
+      figs.appendChild(h('figure', null, holder, h('figcaption', { text: who === 'adam' ? 'Adam' : 'Aina' })));
+    });
+    var chips = h('ul', { class: 'chips', 'aria-label': 'Zon yang telah ditemui' });
+    Object.keys(ZONES).forEach(function (z) { chips.appendChild(h('li', { 'data-chip': z, text: ZONES[z].name })); });
+    var flip = h('button', { class: 'btn btn-sun', type: 'button', text: 'PUSING: LIHAT BELAKANG' });
+    flip.addEventListener('click', function () {
+      var v = figs.getAttribute('data-view') === 'front' ? 'back' : 'front';
+      figs.setAttribute('data-view', v);
+      flip.textContent = v === 'front' ? 'PUSING: LIHAT BELAKANG' : 'PUSING: LIHAT DEPAN';
+    });
+    function hit(z) {
+      if (!ZONES[z]) return;
+      if (found[z]) { showFb('info', ZONES[z].name, ZONES[z].text); return; }
+      found[z] = true; count++;
+      Array.prototype.forEach.call(figs.querySelectorAll('[data-dot="' + z + '"], [data-tag="' + z + '"]'), function (el) { el.classList.add('found'); });
+      var chip = chips.querySelector('[data-chip="' + z + '"]'); if (chip) chip.classList.add('done');
+      sfx.bell();
+      if (count === 4) { showFb('good', 'Hebat! Semua 4 zon larangan ditemui.', 'Zon ini dilindungi pakaian dalam atau ialah anggota peribadi. Tidak boleh disentuh sesuka hati.'); offerNext(); }
+      else showFb('good', ZONES[z].name + ' (' + count + ' / 4)', ZONES[z].text);
+    }
+    figs.addEventListener('click', function (e) {
+      var zt = e.target.closest ? e.target.closest('[data-zone]') : null;
+      if (zt) { hit(zt.getAttribute('data-zone')); return; }
+      if (e.target.closest && e.target.closest('svg') && e.target.tagName.toLowerCase() !== 'svg') {
+        sfx.warn(); wrongAnswers++;
+        figs.classList.remove('shake'); void figs.offsetWidth; figs.classList.add('shake');
+        showFb('bad', 'Bukan zon larangan. Cuba lagi!', 'Masih ada ' + (4 - count) + ' zon. Tekan PUSING untuk melihat bahagian belakang.');
+      }
+    });
+    figs.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute && e.target.getAttribute('data-zone')) { e.preventDefault(); hit(e.target.getAttribute('data-zone')); }
+    });
+    body.appendChild(h('p', { class: 'task', text: 'Klik pada 4 anggota seksual (Zon Larangan) yang dilindungi pakaian dalam. Titik akan bertukar merah jika betul.' }));
+    body.appendChild(h('div', { class: 'zones' }, figs, h('div', { class: 'side' }, flip, chips)));
+  }
+
+  /* --- Soalan pilihan & senario --- */
+  function answerButtons(labels, classes, q, correctIdx, whyFor) {
+    var wrap = h('div', { class: 'options' }), btns = [];
+    labels.forEach(function (lab, i) {
+      var b = h('button', { class: 'btn opt ' + classes[i], type: 'button', text: lab });
+      b.addEventListener('click', function () {
+        if (i === correctIdx) {
+          btns.forEach(function (x) { x.disabled = true; });
+          b.classList.add('is-correct');
+          sfx.bell();
+          showFb('good', 'Betul! Tahniah.', q.why);
+          offerNext();
+        } else {
+          wrongAnswers++; sfx.warn();
+          b.disabled = true; b.classList.add('is-wrong');
+          showFb('bad', 'Belum tepat. Baca penerangan dan cuba lagi.', whyFor(i));
+        }
+      });
+      btns.push(b); wrap.appendChild(b);
+    });
+    return wrap;
+  }
+  function renderChoice(q) {
+    var cls = ['btn-warn', 'btn-good', 'btn-bad'];
+    body.appendChild(h('p', { class: 'q-text', text: q.q }));
+    body.appendChild(h('div', { style: 'height:12px' }));
+    body.appendChild(answerButtons(q.options, cls, q, q.answer, function (i) { return (q.wrongWhy && q.wrongWhy[i]) || ('Jawapan yang betul: ' + q.options[q.answer] + '. ' + q.why); }));
+  }
+  function renderScenario(q) {
+    var keys = ['selamat', 'tidak', 'bersyarat'];
+    body.appendChild(h('div', { class: 'scene' },
+      h('div', { class: 'emoji', 'aria-hidden': 'true', text: q.emoji }),
+      h('div', null, h('p', { class: 'cap', text: q.title }), h('p', { class: 'q-text', text: q.text }))));
+    body.appendChild(h('div', { style: 'height:12px' }));
+    body.appendChild(answerButtons(keys.map(function (k) { return LABEL[k]; }), ['btn-good', 'btn-bad', 'btn-warn'], q, keys.indexOf(q.answer),
+      function () { return 'Jawapan yang betul: ' + LABEL[q.answer] + '. ' + q.why; }));
+  }
+
+  /* --- Susun langkah --- */
+  function renderOrder() {
+    var next = 1, ids = [1, 2, 3], i, j, t;
+    do {
+      for (i = ids.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = ids[i]; ids[i] = ids[j]; ids[j] = t; }
+    } while (ids[0] === 1 && ids[1] === 2);
+    var slots = h('ol', { class: 'slots', 'aria-label': 'Turutan langkah' });
+    var slotEls = {};
+    [1, 2, 3].forEach(function (n) {
+      var t2 = h('span', { text: 'Langkah ke-' + n });
+      slotEls[n] = h('li', { class: 'slot' }, h('span', { class: 'n', text: String(n) }), t2);
+      slotEls[n]._t = t2; slots.appendChild(slotEls[n]);
+    });
+    var wrap = h('div', { class: 'options' });
+    ids.forEach(function (s) {
+      var b = h('button', { class: 'btn opt act ' + STEP_CLS[s], type: 'button', text: STEP_TXT[s] });
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        if (s === next) {
+          b.disabled = true; b.classList.add('used');
+          slotEls[s].classList.add('filled'); slotEls[s]._t.textContent = STEP_TXT[s];
+          sfx.bell(); next++;
+          if (next > 3) { showFb('good', 'Hebat! Turutan kamu betul.', 'Ingat: ia bukan salah kamu. Jangan simpan rahsia. Beritahu ibu bapa atau guru.'); offerNext(); }
+          else showFb('good', 'Betul! Teruskan.', 'Sekarang pilih langkah ke-' + next + '.');
+        } else {
+          wrongAnswers++; sfx.warn();
+          b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+          showFb('bad', 'Belum lagi. Cuba fikir semula.', 'Langkah ke-' + next + ': ' + STEP_HINT[next]);
+        }
+      });
+      wrap.appendChild(b);
+    });
+    body.appendChild(h('p', { class: 'task', text: 'Susun langkah seterusnya mengikut urutan yang betul. Tekan butang satu demi satu: (1), (2), kemudian (3).' }));
+    body.appendChild(slots);
+    body.appendChild(wrap);
+  }
+
+  /* --- Tamat kuiz peringkat --- */
+  function levelComplete() {
+    hideFb(); nextBtn.hidden = true;
+    $('quizStep').hidden = true;
+    body.textContent = '';
+    var last = qLevel >= 3;
+    body.appendChild(h('div', { class: 'complete' },
+      h('div', { class: 'big', 'aria-hidden': 'true', text: '⭐' }),
+      h('h2', { text: 'Tahniah! Peringkat ' + qLevel + ' selesai.' }),
+      h('p', { text: last ? 'Kamu sudah menamatkan semua peringkat. Wira Perisai sedia menerima lencana!' : 'Sedia untuk maze Level ' + (qLevel + 1) + '? Awas robot merah!' })));
+    sfx.bell();
+    nextBtn.textContent = last ? 'LIHAT KEPUTUSAN' : 'KE MAZE LEVEL ' + (qLevel + 1);
+    nextAction = last ? showEnd : function () { loadLevel(qLevel); setPhase('maze'); };
+    nextBtn.hidden = false;
+  }
+  nextBtn.addEventListener('click', function () { sfx.step(); if (nextAction) nextAction(); });
+
+  /* =============== TAMAT & KONFETI =============== */
+  var cf = $('confetti'), cx = null, cfRaf = 0;
+  function stopConfetti() { cancelAnimationFrame(cfRaf); if (cx) cx.clearRect(0, 0, cf.width, cf.height); cf.hidden = true; }
+  function startConfetti() {
+    if (reduceMotion) return;
+    cf.hidden = false; cx = cf.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cf.width = Math.floor(window.innerWidth * dpr); cf.height = Math.floor(window.innerHeight * dpr);
+    var cols = ['#ffd60a', '#2f4bff', '#ff4d8d', '#22c55e', '#38bdf8', '#fb923c'], parts = [], i;
+    for (i = 0; i < 170; i++) {
+      parts.push({ x: Math.random() * cf.width, y: -Math.random() * cf.height * 0.6, w: (6 + Math.random() * 8) * dpr, h: (10 + Math.random() * 10) * dpr,
+        vx: (Math.random() - 0.5) * 3 * dpr, vy: (2 + Math.random() * 4) * dpr, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3, c: cols[i % cols.length] });
+    }
+    var t0 = performance.now();
+    function step(t) {
+      cx.clearRect(0, 0, cf.width, cf.height);
+      var alive = 0;
+      parts.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        if (p.y < cf.height + 40) alive++;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore();
+      });
+      if (alive > 0 && (t || performance.now()) - t0 < 7000) cfRaf = requestAnimationFrame(step); else stopConfetti();
+    }
+    cfRaf = requestAnimationFrame(step);
+  }
+  function showEnd() {
+    var mistakes = hits + wrongAnswers;
+    var stars = mistakes === 0 ? '⭐⭐⭐' : mistakes <= 4 ? '⭐⭐' : '⭐';
+    $('endScore').textContent = 'Bintang: ' + stars + ' · Ditangkap robot: ' + hits + ' kali · Jawapan salah: ' + wrongAnswers + ' kali';
+    setPhase('end'); sfx.win(); startConfetti();
+  }
+
+  /* =============== MULA & MAIN SEMULA =============== */
+  function startGame() {
+    hits = 0; wrongAnswers = 0;
+    loadLevel(0);
+    setPhase('maze');
+  }
+  $('btnStart').addEventListener('click', function () { getCtx(); sfx.bell(); startGame(); });
+  $('btnAgain').addEventListener('click', function () { sfx.bell(); hits = 0; wrongAnswers = 0; setPhase('start'); });
+
+  loadLevel(0);
+  setPhase('start');
+})();
+</script>
+</body>
+</html>
+
+</body></html>
